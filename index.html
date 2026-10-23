@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دليلى — سوق إكسسوارات الهواتف المحلية</title>
+  <meta name="description" content="منصة دليلى المحلية لبيع وشراء إكسسوارات الهواتف الذكية: جرابات، اسكرينات، شواحن، وكابلات معتمدة بأفضل الأسعار.">
+
+  <!-- Google Font: Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- SheetJS for Excel Bulk Import -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. CUSTOMER PAGE VIEW (Reference Design)
+       ========================================================================= -->
+  <div id="customer-view" class="view-section">
+    <!-- Header: Single white rounded bar in exact RTL order -->
+    <header class="header-container">
+      <div class="customer-header-bar">
+        <div class="header-right-group">
+          <!-- 1. Logo: Orange square "د" + "دليلى" -->
+          <div class="dalily-logo" onclick="switchView('customer-view')">
+            <div class="logo-box">د</div>
+            <span class="logo-text">دليلى</span>
+          </div>
+
+          <!-- 2. Navy pill button with store/section name -->
+          <div class="header-store-pill">الجرابات والإكسسوارات</div>
+
+          <!-- 3. Dynamic Account & Navigation (Hides dashboard link for customers) -->
+          <div id="headerAuthNav" class="header-auth-nav"></div>
+        </div>
+
+        <!-- 4. Wide search input -->
+        <div class="header-search-wrap">
+          <input 
+            type="text" 
+            id="headerSearchInput" 
+            class="header-search-input" 
+            placeholder="ابحث عن منتج أو موديل أو SKU..." 
+            autocomplete="off"
+          />
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+
+        <!-- 5. Orange "السلة" button with cart icon and round navy counter badge -->
+        <button id="headerCartBtn" class="header-cart-btn" aria-label="عرض سلة المشتريات">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 01-8 0"></path>
+          </svg>
+          <span>السلة</span>
+          <span id="headerCartBadge" class="cart-badge-count">٠</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Body: Two Columns (Right Sidebar + Main Area) -->
+    <main class="customer-layout">
+      <!-- Right Sidebar (~290px) -->
+      <aside class="customer-sidebar">
+        <!-- Category Section -->
+        <div>
+          <h3 class="sidebar-section-title">الفئة</h3>
+          <div class="category-pills-list">
+            <button class="category-pill-btn active" data-category="الكل">
+              <span>الكل</span>
+            </button>
+            <button class="category-pill-btn" data-category="جرابات">
+              <span>جرابات</span>
+            </button>
+            <button class="category-pill-btn" data-category="اسكرينات">
+              <span>اسكرينات</span>
+            </button>
+            <button class="category-pill-btn" data-category="شواحن">
+              <span>شواحن</span>
+            </button>
+            <button class="category-pill-btn" data-category="كابلات">
+              <span>كابلات</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Phone Model Section -->
+        <div>
+          <h3 class="sidebar-section-title">توافق الهاتف</h3>
+          <select id="phoneModelSelect" class="filter-select" aria-label="اختر موديل الهاتف">
+            <option value="الكل">الكل</option>
+            <option value="iPhone 15 Pro">iPhone 15 Pro</option>
+            <option value="Samsung S24 Ultra">Samsung S24 Ultra</option>
+            <option value="Xiaomi 13T">Xiaomi 13T</option>
+          </select>
+        </div>
+
+        <!-- Reset Filters Outlined Button -->
+        <button id="btnResetFilters" class="btn-reset-filters">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          مسح الفلاتر
+        </button>
+      </aside>
+
+      <!-- Main Area: Title row + 4-Column Product Grid -->
+      <section class="customer-main">
+        <div class="products-title-row">
+          <h2 class="products-main-heading">المنتجات</h2>
+          <span id="productsCountBadge" class="products-count-badge">١٣ منتج</span>
+        </div>
+
+        <!-- 4-Column Responsive Product Grid -->
+        <div id="customerProductsGrid" class="products-grid">
+          <!-- Dynamically populated by CustomerModule -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- =========================================================================
+       2. LOGIN & REGISTRATION VIEW
+       ========================================================================= -->
+  <div id="login-view" class="view-section">
+    <div class="login-page-wrap">
+      <div class="login-card" style="max-width: 490px;">
+        <div class="login-brand-header">
+          <div class="dalily-logo">
+            <div class="logo-box lg">د</div>
+            <span class="logo-text" style="font-size: 1.8rem;">دليلى</span>
+          </div>
+          <p class="login-tagline">سوقك المحلي المتخصص في ملحقات وإكسسوارات الهواتف المحمولة</p>
+        </div>
+
+        <!-- 3 Independent Account Portals Selector -->
+        <div class="portal-tabs-grid">
+          <button type="button" id="portalTab_customer" class="portal-tab-btn active" onclick="AuthModule.selectPortal('customer')">
+            <span class="portal-tab-icon">🛒</span>
+            <span>بوابة العملاء</span>
+          </button>
+          <button type="button" id="portalTab_store_owner" class="portal-tab-btn" onclick="AuthModule.selectPortal('store_owner')">
+            <span class="portal-tab-icon">🏪</span>
+            <span>بوابة التجار</span>
+          </button>
+          <button type="button" id="portalTab_admin" class="portal-tab-btn" onclick="AuthModule.selectPortal('admin')">
+            <span class="portal-tab-icon">⚙️</span>
+            <span>مدير النظام</span>
+          </button>
+        </div>
+
+        <div id="authErrorAlert" class="auth-error-alert"></div>
+
+        <!-- ==================== 1. CUSTOMER PORTAL PANEL ==================== -->
+        <div id="portalPanel_customer" class="portal-panel active-portal">
+          <div class="auth-tabs" style="margin-bottom: 16px;">
+            <button type="button" id="tabCustLoginBtn" class="auth-tab-btn active">تسجيل الدخول</button>
+            <button type="button" id="tabCustRegisterBtn" class="auth-tab-btn">حساب عميل جديد</button>
+          </div>
+
+          <!-- Customer Login Form -->
+          <form id="customerLoginForm">
+            <div id="custLoginFormFields">
+              <div class="form-group">
+                <label for="custLoginUsername" class="form-label">اسم المستخدم (العميل)</label>
+                <input type="text" id="custLoginUsername" class="form-control" placeholder="أدخل اسم المستخدم (مثال: user)" required />
+              </div>
+
+              <div class="form-group">
+                <label for="custLoginPassword" class="form-label">كلمة المرور</label>
+                <input type="password" id="custLoginPassword" class="form-control" placeholder="••••••••" required />
+              </div>
+
+              <button type="submit" class="btn btn-primary-orange" style="width: 100%; padding: 12px; margin-top: 10px;">
+                دخول إلى صفحة التسوق
+              </button>
+
+              <!-- Quick Demo Customer -->
+              <div style="margin-top: 14px; text-align: center;">
+                <button type="button" id="btnQuickCustomerLogin" class="btn btn-outline btn-sm" style="width: 100%;">
+                  ⚡ تجربة سريعة: دخول بحساب عميل (user / user)
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Customer Register Form -->
+          <form id="customerRegisterForm">
+            <div id="custRegisterFormFields" style="display: none;">
+              <div class="form-group">
+                <label for="custRegFullName" class="form-label">الاسم الكامل</label>
+                <input type="text" id="custRegFullName" class="form-control" placeholder="مثال: أحمد عبد الله" required />
+              </div>
+
+              <div class="form-group">
+                <label for="custRegUsername" class="form-label">اسم المستخدم الجديد</label>
+                <input type="text" id="custRegUsername" class="form-control" placeholder="اختر اسم مستخدم" required />
+              </div>
+
+              <div class="form-group">
+                <label for="custRegPassword" class="form-label">كلمة المرور</label>
+                <input type="password" id="custRegPassword" class="form-control" placeholder="أدخل كلمة مرور قوية" required />
+              </div>
+
+              <button type="submit" class="btn btn-primary-orange" style="width: 100%; padding: 12px; margin-top: 10px;">
+                إنشاء حساب العميل والتسوق
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ==================== 2. STORE OWNER PORTAL PANEL ==================== -->
+        <div id="portalPanel_store_owner" class="portal-panel">
+          <div class="portal-badge-info">
+            <span>🏪</span>
+            <span>بوابة أصحاب المتاجر — مخصصة للتجار لإدارة المنتجات والمخزون ومتابعة المبيعات.</span>
+          </div>
+
+          <form id="storeLoginForm">
+            <div class="form-group">
+              <label for="storeLoginUsername" class="form-label">اسم مستخدم التاجر</label>
+              <input type="text" id="storeLoginUsername" class="form-control" placeholder="اسم مستخدم صاحب المحل" required />
+            </div>
+
+            <div class="form-group">
+              <label for="storeLoginPassword" class="form-label">كلمة المرور</label>
+              <input type="password" id="storeLoginPassword" class="form-control" placeholder="••••••••" required />
+            </div>
+
+            <button type="submit" class="btn btn-navy" style="width: 100%; padding: 12px; margin-top: 10px;">
+              دخول إلى لوحة صاحب المحل
+            </button>
+
+            <!-- Quick Demo Store Owner -->
+            <div style="margin-top: 14px; text-align: center;">
+              <button type="button" id="btnQuickStoreLogin" class="btn btn-outline btn-sm" style="width: 100%;">
+                ⚡ تجربة سريعة: دخول بحساب صاحب محل (Store Owner)
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ==================== 3. ADMIN PORTAL PANEL ==================== -->
+        <div id="portalPanel_admin" class="portal-panel">
+          <div class="portal-badge-info">
+            <span>⚙️</span>
+            <span>بوابة الإدارة المركزية — مخصصة لمدير المنصة لاعتماد المحلات والرقابة على المنتجات.</span>
+          </div>
+
+          <form id="adminLoginForm">
+            <div class="form-group">
+              <label for="adminLoginUsername" class="form-label">اسم مستخدم المدير</label>
+              <input type="text" id="adminLoginUsername" class="form-control" placeholder="admin" required />
+            </div>
+
+            <div class="form-group">
+              <label for="adminLoginPassword" class="form-label">كلمة المرور</label>
+              <input type="password" id="adminLoginPassword" class="form-control" placeholder="••••••••" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary-orange" style="width: 100%; padding: 12px; margin-top: 10px;">
+              دخول إلى لوحة المدير
+            </button>
+
+            <!-- Quick Demo Admin -->
+            <div style="margin-top: 14px; text-align: center;">
+              <button type="button" id="btnQuickAdminLogin" class="btn btn-outline btn-sm" style="width: 100%;">
+                ⚡ تجربة سريعة: دخول بحساب المدير (admin / admin)
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Back to Shopping -->
+        <div style="text-align: center; border-top: 1px solid var(--border-color); padding-top: 14px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="switchView('customer-view')">
+            ← تصفح المنتجات كزائر
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. STORE OWNER DASHBOARD VIEW
+       ========================================================================= -->
+  <div id="store-view" class="view-section">
+    <div class="dashboard-container">
+      <!-- Header -->
+      <div class="dashboard-header-bar">
+        <div class="dashboard-header-right">
+          <div class="dalily-logo" onclick="switchView('customer-view')">
+            <div class="logo-box">د</div>
+            <span class="logo-text">دليلى</span>
+          </div>
+          <span class="dashboard-role-badge">لوحة صاحب المحل</span>
+          <span id="storeOwnerHeaderName" class="dashboard-user-info">الجرابات والإكسسوارات</span>
+        </div>
+        <div class="dashboard-header-left">
+          <button class="btn btn-outline btn-sm" onclick="switchView('customer-view')">عرض صفحة العميل</button>
+          <button class="btn btn-danger btn-sm btn-logout-action">تسجيل الخروج</button>
+        </div>
+      </div>
+
+      <!-- 1. Statistics Header Cards -->
+      <div class="stats-cards-grid">
+        <div class="stat-card">
+          <span class="stat-title">إجمالي المنتجات المعروضة</span>
+          <span id="statTotalItems" class="stat-value">٠</span>
+        </div>
+        <div class="stat-card accent-navy">
+          <span class="stat-title">عدد التصنيفات</span>
+          <span id="statTotalCategories" class="stat-value">٠</span>
+        </div>
+        <div class="stat-card accent-green">
+          <span class="stat-title">إجمالي المبيعات</span>
+          <span id="statTotalSales" class="stat-value green">٠ ج.م</span>
+        </div>
+      </div>
+
+      <!-- 2. Store Profile Setup ("إنشاء بيانات المحل") -->
+      <div class="dashboard-card-section">
+        <div class="section-header-row">
+          <h3 class="section-heading">بيانات المحل التجاري</h3>
+          <div id="storeStatusBadgeContainer">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+        <form id="storeProfileForm">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div class="form-group">
+              <label for="storeNameInput" class="form-label">اسم المحل</label>
+              <input type="text" id="storeNameInput" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="storeAreaInput" class="form-label">المنطقة / العنوان</label>
+              <input type="text" id="storeAreaInput" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="storePhoneInput" class="form-label">رقم الهاتف للتواصل</label>
+              <input type="text" id="storePhoneInput" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="storeLogoInput" class="form-label">شعار المحل</label>
+              <div class="img-upload-box">
+                <input type="file" id="storeLogoInput" accept="image/*" class="form-control" style="padding: 7px;" />
+                <div id="storeLogoPreview" class="img-preview-thumb">
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">شعار</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="storeDescInput" class="form-label">وصف قصير عن المحل والخدمات</label>
+            <textarea id="storeDescInput" class="form-control" rows="2"></textarea>
+          </div>
+          <div style="text-align: left; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary-orange">
+              حفظ وتحديث بيانات المحل
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 3. Manual Product Form ("إضافة منتج جديد") -->
+      <div class="dashboard-card-section">
+        <div class="section-header-row">
+          <h3 class="section-heading">إضافة منتج جديد إلى المخزون</h3>
+        </div>
+        <div id="prodFormError" class="auth-error-alert"></div>
+        <form id="manualProductForm">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <div class="form-group">
+              <label for="prodNameInput" class="form-label">اسم المنتج</label>
+              <input type="text" id="prodNameInput" class="form-control" placeholder="مثال: جراب سيليكون مضاد للصدمات" required />
+            </div>
+            <div class="form-group">
+              <label for="prodSkuInput" class="form-label">كود المنتج (SKU)</label>
+              <input type="text" id="prodSkuInput" class="form-control" placeholder="مثال: CAS-IP15-09" />
+            </div>
+            <div class="form-group">
+              <label for="prodPriceInput" class="form-label">السعر (بالجنيه المصري)</label>
+              <input type="number" id="prodPriceInput" class="form-control" min="1" step="1" placeholder="مثال: 250" required />
+            </div>
+            <div class="form-group">
+              <label for="prodCategorySelect" class="form-label">التصنيف</label>
+              <select id="prodCategorySelect" class="form-control">
+                <option value="جرابات">جرابات</option>
+                <option value="اسكرينات">اسكرينات</option>
+                <option value="شواحن">شواحن</option>
+                <option value="كابلات">كابلات</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="prodModelSelect" class="form-label">موديل الهاتف المتوافق</label>
+              <select id="prodModelSelect" class="form-control">
+                <option value="iPhone 15 Pro">iPhone 15 Pro</option>
+                <option value="Samsung S24 Ultra">Samsung S24 Ultra</option>
+                <option value="Xiaomi 13T">Xiaomi 13T</option>
+                <option value="الكل">متوافق مع الكل</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="prodQuantityInput" class="form-label">الكمية المتوفرة بالمخزن</label>
+              <input type="number" id="prodQuantityInput" class="form-control" min="0" value="10" required />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; margin-top: 10px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="prodImageInput" class="form-label">صورة المنتج (معاينة فورية)</label>
+              <div class="img-upload-box">
+                <input type="file" id="prodImageInput" accept="image/*" class="form-control" style="padding: 7px;" />
+                <div id="prodImagePreview" class="img-preview-thumb">
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">صورة</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <span class="form-label">حالة التوفر</span>
+              <label class="toggle-switch-wrap" style="margin-top: 6px;">
+                <input type="checkbox" id="prodStockToggle" class="toggle-switch-input" checked />
+                <div class="toggle-switch-track">
+                  <div class="toggle-switch-thumb"></div>
+                </div>
+                <span style="font-size: 0.88rem; font-weight: 700;">متوفر للبيع</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label for="prodDescInput" class="form-label">وصف المنتج ومميزاته</label>
+            <textarea id="prodDescInput" class="form-control" rows="2" placeholder="أدخل تفاصيل ومواصفات المنتج..."></textarea>
+          </div>
+
+          <div style="text-align: left; margin-top: 12px;">
+            <button type="submit" class="btn btn-primary-orange">
+              + إضافة المنتج إلى المتجر
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 4. Bulk Upload Section (.csv & .xlsx with SheetJS) -->
+      <div class="dashboard-card-section">
+        <div class="section-header-row">
+          <div>
+            <h3 class="section-heading">الاستيراد الجماعي للمنتجات (Bulk Upload)</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 2px;">
+              ارفع ملف بصيغة <strong>CSV</strong> أو <strong>XLSX (إكسيل)</strong> لاستيراد عشرات المنتجات دفعة واحدة.
+            </p>
+          </div>
+          <button id="btnDownloadSampleCsv" class="btn btn-outline btn-sm">
+            تحميل نموذج CSV تجريبي
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+          <input type="file" id="bulkFileInput" accept=".csv, .xlsx, .xls" class="form-control" style="max-width: 420px; padding: 7px;" />
+          <span style="font-size: 0.82rem; color: var(--text-muted);">الأعمدة المطلوبة: الاسم، السعر، التصنيف، موديل الهاتف، الكمية، الوصف، SKU</span>
+        </div>
+
+        <!-- Bulk Preview Table (Hidden until file selected) -->
+        <div id="bulkPreviewContainer" style="display: none; margin-top: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: 800; color: var(--dark-navy);">معاينة المنتجات المراد استيرادها:</span>
+            <button id="btnImportBulk" class="btn btn-primary-orange btn-sm" disabled>
+              استيراد المنتجات المحددة
+            </button>
+          </div>
+          <div class="table-responsive-container">
+            <table class="dalily-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px; text-align: center;">
+                    <input type="checkbox" id="bulkSelectAll" checked />
+                  </th>
+                  <th>اسم المنتج</th>
+                  <th>السعر</th>
+                  <th>التصنيف</th>
+                  <th>الموديل</th>
+                  <th>الكمية</th>
+                  <th>SKU</th>
+                  <th>حالة الفحص</th>
+                </tr>
+              </thead>
+              <tbody id="bulkPreviewTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Product Management Table -->
+      <div class="dashboard-card-section">
+        <div class="section-header-row">
+          <h3 class="section-heading">إدارة منتجات متجرك</h3>
+          <div style="max-width: 300px; width: 100%;">
+            <input type="text" id="storeProductSearch" class="form-control" placeholder="بحث في منتجاتك..." />
+          </div>
+        </div>
+
+        <div class="table-responsive-container">
+          <table class="dalily-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">الصورة</th>
+                <th>اسم المنتج والبيانات</th>
+                <th>التصنيف</th>
+                <th>السعر</th>
+                <th>الكمية</th>
+                <th>التوفر</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="storeProductsTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. ADMIN DASHBOARD VIEW
+       ========================================================================= -->
+  <div id="admin-view" class="view-section">
+    <div class="dashboard-container">
+      <!-- Header -->
+      <div class="dashboard-header-bar">
+        <div class="dashboard-header-right">
+          <div class="dalily-logo" onclick="switchView('customer-view')">
+            <div class="logo-box">د</div>
+            <span class="logo-text">دليلى</span>
+          </div>
+          <span class="dashboard-role-badge">لوحة المدير</span>
+          <span class="dashboard-user-info">المستخدم: admin (مدير النظام)</span>
+        </div>
+        <div class="dashboard-header-left">
+          <button class="btn btn-outline btn-sm" onclick="switchView('customer-view')">عرض صفحة العميل</button>
+          <button class="btn btn-danger btn-sm btn-logout-action">تسجيل الخروج</button>
+        </div>
+      </div>
+
+      <!-- Summary Stat Cards -->
+      <div class="stats-cards-grid">
+        <div class="stat-card">
+          <span class="stat-title">إجمالي المحلات المسجلة</span>
+          <span id="adminStatStores" class="stat-value">٠</span>
+        </div>
+        <div class="stat-card accent-navy">
+          <span class="stat-title">محلات قيد المراجعة</span>
+          <span id="adminStatPendingStores" class="stat-value" style="color: var(--primary-orange);">٠</span>
+        </div>
+        <div class="stat-card accent-green">
+          <span class="stat-title">إجمالي المنتجات في النظام</span>
+          <span id="adminStatProducts" class="stat-value green">٠</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">المنتجات المخفية إدارياً</span>
+          <span id="adminStatHiddenProducts" class="stat-value" style="color: var(--danger-red);">٠</span>
+        </div>
+      </div>
+
+      <!-- 1. Review Pending Stores ("مراجعة المحلات الجديدة") -->
+      <div class="dashboard-card-section">
+        <div class="section-header-row">
+          <h3 class="section-heading">مراجعة المحلات الجديدة والطلبات المعلقة</h3>
+        </div>
+        <div id="pendingStoresContainer">
+          <!-- Pending stores cards populated dynamically -->
+        </div>
+      </div>
+
+      <!-- 2. Global Stores Management -->
+      <div class="dashboard-card-section">
+        <div class="section-header-row">
+          <h3 class="section-heading">كافة المحلات المسجلة على المنصة</h3>
+        </div>
+        <div class="table-responsive-container">
+          <table class="dalily-table">
+            <thead>
+              <tr>
+                <th>اسم المحل</th>
+                <th>اسم المالك</th>
+                <th>المنطقة / العنوان</th>
+                <th>الحالة</th>
+                <th>عدد المنتجات</th>
+                <th>إجمالي المبيعات</th>
+                <th>الإجراء</th>
+              </tr>
+            </thead>
+            <tbody id="adminStoresTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. Global Products & Moderation ("إخفاء المنتجات المخالفة") -->
+      <div class="dashboard-card-section">
+        <div class="section-header-row">
+          <h3 class="section-heading">إدارة ومراقبة كافة المنتجات</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 8px;">
+          <div>
+            <label class="form-label" style="font-size:0.8rem;">تصفية حسب المتجر</label>
+            <select id="adminFilterStore" class="form-control">
+              <option value="الكل">كل المحلات</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-size:0.8rem;">تصفية حسب التصنيف</label>
+            <select id="adminFilterCategory" class="form-control">
+              <option value="الكل">كل التصنيفات</option>
+              <option value="جرابات">جرابات</option>
+              <option value="اسكرينات">اسكرينات</option>
+              <option value="شواحن">شواحن</option>
+              <option value="كابلات">كابلات</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-size:0.8rem;">حالة العرض</label>
+            <select id="adminFilterStatus" class="form-control">
+              <option value="الكل">الكل</option>
+              <option value="visible">معروض فقط</option>
+              <option value="hidden">مخفي فقط</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-size:0.8rem;">بحث سريع</label>
+            <input type="text" id="adminGlobalSearch" class="form-control" placeholder="بحث بالاسم أو SKU..." />
+          </div>
+        </div>
+
+        <div class="table-responsive-container">
+          <table class="dalily-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">الصورة</th>
+                <th>اسم المنتج</th>
+                <th>المتجر التابع له</th>
+                <th>التصنيف</th>
+                <th>السعر</th>
+                <th>المخزون</th>
+                <th>حالة الظهور</th>
+                <th>إجراء الإشراف</th>
+              </tr>
+            </thead>
+            <tbody id="adminGlobalProductsTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODALS & DRAWERS
+       ========================================================================= -->
+
+  <!-- Cart Drawer -->
+  <div id="cartDrawerOverlay" class="cart-drawer-overlay">
+    <div class="cart-drawer">
+      <div class="cart-drawer-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" stroke-width="2.2">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 01-8 0"></path>
+          </svg>
+          <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--dark-navy);">سلة المشتريات</h3>
+        </div>
+        <button id="closeCartBtn" class="modal-close-btn" aria-label="إغلاق السلة">✕</button>
+      </div>
+
+      <div id="cartItemsList" class="cart-items-list">
+        <!-- Dynamically rendered -->
+      </div>
+
+      <div class="cart-drawer-footer">
+        <div class="cart-total-row">
+          <span class="cart-total-label">المجموع الإجمالي:</span>
+          <span id="cartTotalAmount" class="cart-total-amount">٠ ج.م</span>
+        </div>
+        <button id="btnCheckout" class="btn btn-primary-orange btn-checkout">
+          إتمام الطلب
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Success Modal -->
+  <div id="orderSuccessModal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center;">
+      <div class="order-success-body">
+        <div class="success-badge-icon">✓</div>
+        <h3 style="font-size: 1.4rem; font-weight: 900; color: var(--dark-navy);">تم تأكيد طلبك بنجاح!</h3>
+        <p style="font-size: 0.95rem; color: var(--text-muted);">
+          شكرًا لتسوقك من منصة "دليلى". تم استلام تفاصيل طلبك وجاري إعداده وتجهيزه للتسليم.
+        </p>
+
+        <div class="order-receipt-box">
+          <div class="receipt-row">
+            <span style="color: var(--text-muted);">رقم الطلب:</span>
+            <strong id="orderReceiptNumber" style="color: var(--dark-navy); font-size: 1.05rem;">—</strong>
+          </div>
+          <div class="receipt-row">
+            <span style="color: var(--text-muted);">عدد القطع:</span>
+            <span id="orderReceiptCount" style="font-weight: 700;">—</span>
+          </div>
+          <div class="receipt-row" style="border-top: 1px dashed var(--border-color); padding-top: 8px;">
+            <strong style="color: var(--dark-navy);">الإجمالي المسدد:</strong>
+            <strong id="orderReceiptTotal" style="color: var(--green); font-size: 1.2rem;">—</strong>
+          </div>
+        </div>
+
+        <button id="closeOrderSuccessBtn" class="btn btn-primary-orange" style="width: 100%; margin-top: 10px;">
+          متابعة التسوق
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Product Modal (Store Owner) -->
+  <div id="editProductModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">تعديل بيانات المنتج</h3>
+        <button id="closeEditProductModalBtn" class="modal-close-btn">✕</button>
+      </div>
+      <form id="editProductForm">
+        <div class="form-group">
+          <label class="form-label">اسم المنتج</label>
+          <input type="text" id="editProdName" class="form-control" required />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label">السعر (ج.م)</label>
+            <input type="number" id="editProdPrice" class="form-control" min="1" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">كود SKU</label>
+            <input type="text" id="editProdSku" class="form-control" />
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label">التصنيف</label>
+            <select id="editProdCategory" class="form-control">
+              <option value="جرابات">جرابات</option>
+              <option value="اسكرينات">اسكرينات</option>
+              <option value="شواحن">شواحن</option>
+              <option value="كابلات">كابلات</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">الموديل</label>
+            <select id="editProdModel" class="form-control">
+              <option value="iPhone 15 Pro">iPhone 15 Pro</option>
+              <option value="Samsung S24 Ultra">Samsung S24 Ultra</option>
+              <option value="Xiaomi 13T">Xiaomi 13T</option>
+              <option value="الكل">متوافق مع الكل</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: center;">
+          <div class="form-group">
+            <label class="form-label">الكمية</label>
+            <input type="number" id="editProdQuantity" class="form-control" min="0" required />
+          </div>
+          <div class="form-group">
+            <span class="form-label">حالة التوفر</span>
+            <label class="toggle-switch-wrap" style="margin-top: 6px;">
+              <input type="checkbox" id="editProdStockToggle" class="toggle-switch-input" />
+              <div class="toggle-switch-track">
+                <div class="toggle-switch-thumb"></div>
+              </div>
+              <span style="font-size: 0.88rem; font-weight: 700;">متوفر</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الوصف</label>
+          <textarea id="editProdDesc" class="form-control" rows="2"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('editProductModal').classList.remove('active')">إلغاء</button>
+          <button type="submit" class="btn btn-primary-orange">حفظ التعديلات</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div id="deleteConfirmModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 420px; text-align: center;">
+      <div style="font-size: 3rem; color: var(--danger-red); margin-bottom: 10px;">⚠️</div>
+      <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--dark-navy);">تأكيد حذف المنتج</h3>
+      <p style="color: var(--text-muted); font-size: 0.92rem; margin: 10px 0 20px 0;">
+        هل أنت متأكد من رغبتك في حذف هذا المنتج نهائيًا من مخزون متجرك؟ لا يمكن التراجع عن هذا الإجراء.
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button id="cancelDeleteBtn" class="btn btn-outline">إلغاء</button>
+        <button id="confirmDeleteBtn" class="btn btn-danger">نعم، احذف المنتج</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Moderation Reason Modal -->
+  <div id="moderationModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">إخفاء المنتج عن العملاء</h3>
+        <button id="closeModerationModalBtn" class="modal-close-btn">✕</button>
+      </div>
+      <form id="moderationForm">
+        <p style="font-size: 0.92rem; color: var(--dark-navy); margin-bottom: 12px;">
+          أنت بصدد إخفاء المنتج: <strong id="moderationProdName" style="color: var(--primary-orange);">—</strong>
+        </p>
+        <div class="form-group">
+          <label class="form-label">سبب الإخفاء (اختياري)</label>
+          <input type="text" id="moderationReasonInput" class="form-control" placeholder="مثال: مخالف للشروط، سعر غير منطقي، محتوى مضلل..." />
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">
+          سيتوقف ظهور المنتج فوراً في صفحة العملاء والسلة ولن يتمكن أي عميل من شرائه حتى يتم إلغاء الإخفاء.
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('moderationModal').classList.remove('active')">إلغاء</button>
+          <button type="submit" class="btn btn-danger">تأكيد الإخفاء فوراً</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Footer with Reset Demo Option -->
+  <footer class="dalily-footer">
+    <div>
+      © 2026 <strong>دليلى (Dalily)</strong> — سوق إكسسوارات الهواتف المحلية. جميع الحقوق محفوظة.
+    </div>
+    <div>
+      <button type="button" class="btn-reset-demo-link" onclick="handleResetDemoData()">
+        إعادة ضبط البيانات التجريبية (Reset Demo)
+      </button>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/customer.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
